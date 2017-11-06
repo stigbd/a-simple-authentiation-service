@@ -1,3 +1,3 @@
--   do not send password over the wire
+-   do not send password in response to client
+-   do not store password in jwt
 -   protect list all users (only admin should have access)
--   create login endpoint
