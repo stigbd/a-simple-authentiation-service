@@ -1,0 +1,3 @@
+-   do not send password over the wire
+-   protect list all users (only admin should have access)
+-   create login endpoint

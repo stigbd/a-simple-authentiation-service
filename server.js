@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
   res.send('hello world, from a simple authentication service');
 });
 
-app.post('/signup', function(req,res){
+app.post('/user', function(req, res){
   let user = new User({
     email: req.body.email,
     password: req.body.password
@@ -33,7 +33,16 @@ app.post('/signup', function(req,res){
     }
     res.json({error:false})
   });
+});
 
+app.get('/user', function(req, res){
+  User.find({}, function(err, users) {
+    var userMap = {};
+    users.forEach(function(user) {
+      userMap[user._id] = user;
+    });
+    res.send(userMap);
+  });
 });
 
 app.listen(3000);
