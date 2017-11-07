@@ -1,3 +1,4 @@
 -   do not send password in response to client
 -   do not store password in jwt
--   protect list all users (only admin should have access)
+-   protect list all users (only users with admin-role should have access)
+-   implement change user, i.e. change password

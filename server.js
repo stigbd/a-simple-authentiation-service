@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
   res.send('hello world, from a simple authentication service');
 });
 
+// Create a new user
 app.post('/user', function(req, res){
   var passwordToSave = bcrypt.hashSync(req.body.password, 10);
   let user = new User({
@@ -39,6 +40,12 @@ app.post('/user', function(req, res){
   });
 });
 
+// Update user (i.e. only password can be changed for now)
+//app.put('/user', function(req, res){
+//  return res.status()
+//});
+
+// Authenticate a user given email and password:
 app.post('/authenticate', function(req, res){
   let data = {
     email: req.body.email
@@ -61,6 +68,10 @@ app.post('/authenticate', function(req, res){
   })
 });
 
+// ===== Protected Routes =====
+
+// Get a list of users
+// Only users with admin-role should have access to this
 app.get('/user', function(req, res){
   User.find({}, function(err, users) {
     var userMap = {};
@@ -68,6 +79,35 @@ app.get('/user', function(req, res){
       userMap[user._id] = user;
     });
     res.send(userMap);
+  });
+});
+
+// Get an individual user
+// Only the user or an admin should have access to this
+app.get('/user/:id', (req, res) => {
+  var id = req.params.id;
+  console.log('get user-id', id);
+  User.findById(id, function(err, user) {
+    if(!user){
+      return res.status(404).json({'message':'User not found'});
+    }
+    if(err){
+      return res.status(500).json({'message': 'Internal server error'});
+    }
+    res.send(user);
+  });
+});
+
+// Delete a user.
+// Only the user or an admin shold have access to this
+app.delete('/user/:id', (req, res) => {
+  var id = req.params.id;
+  console.log('delete user-id', id);
+  User.findByIdAndRemove(id, function(err, user) {
+    if(err){
+      return res.status(500).json({'message': 'Internal server error'});
+    }
+    res.status(204).json();
   });
 });
 
