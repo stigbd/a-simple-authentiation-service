@@ -40,11 +40,6 @@ app.post('/user', function(req, res){
   });
 });
 
-// Update user (i.e. only password can be changed for now)
-//app.put('/user', function(req, res){
-//  return res.status()
-//});
-
 // Authenticate a user given email and password:
 app.post('/authenticate', function(req, res){
   let data = {
@@ -72,13 +67,22 @@ app.post('/authenticate', function(req, res){
 
 // Get a list of users
 // Only users with admin-role should have access to this
-app.get('/user', function(req, res){
-  User.find({}, function(err, users) {
-    var userMap = {};
-    users.forEach(function(user) {
-      userMap[user._id] = user;
+app.get('/user', (req, res) => {
+  // if (!req.headers.authorization) {
+  //     return res.status(401).json({'message':'Unauthorized'});
+  // }
+  let decoded = jwt.verify(req.headers.authorization, process.env.SECRET, function(err, decoded) {
+    if (err) {
+      console.error(err.stack);
+      return res.status(401).json({'message':'Unauthorized'});
+    }
+    User.find({}, function(err, users) {
+      var userMap = {};
+      users.forEach(function(user) {
+        userMap[user._id] = user;
+      });
+      res.send(userMap);
     });
-    res.send(userMap);
   });
 });
 
@@ -97,6 +101,11 @@ app.get('/user/:id', (req, res) => {
     res.send(user);
   });
 });
+
+// Update user (i.e. only password can be changed for now)
+//app.put('/user', function(req, res){
+//  return res.status()
+//});
 
 // Delete a user.
 // Only the user or an admin shold have access to this
