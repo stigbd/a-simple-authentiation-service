@@ -7,16 +7,17 @@ let mongoose = require('mongoose');
 let bodyParser = require('body-parser');
 let User = require('./models/user');
 let bcrypt = require('bcrypt');
-let jwt = require('jsonwebtoken');
+let jsonwebtoken = require('jsonwebtoken');
+let jwt = require('express-jwt');
 let dotenv = require('dotenv').config();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('combined'))
+app.use(morgan('combined'));
+mongoose.Promise = global.Promise;
 
 // Set up mongodb connection
 mongoose.connect("mongodb://localhost/demo", {useMongoClient: true});
-
 
 // ===== Public Routes =====
 
@@ -56,7 +57,7 @@ app.post('/authenticate', function(req, res){
       return res.status(404).json({'message': 'Password does not match'});
     }
     console.log(user);
-    let token = jwt.sign(user, process.env.SECRET, {
+    let token = jsonwebtoken.sign(user, process.env.SECRET, {
       expiresIn: 1440 // expires in 1 hour
     });
     res.json({error: false, token: token});
@@ -64,39 +65,33 @@ app.post('/authenticate', function(req, res){
 });
 
 // ===== Protected Routes =====
+var auth = jwt({ secret: process.env.SECRET});
 
 // Get a list of users
 // Only users with admin-role should have access to this
-app.get('/user', (req, res) => {
-  // if (!req.headers.authorization) {
-  //     return res.status(401).json({'message':'Unauthorized'});
-  // }
-  let decoded = jwt.verify(req.headers.authorization, process.env.SECRET, function(err, decoded) {
-    if (err) {
-      console.error(err.stack);
-      return res.status(401).json({'message':'Unauthorized'});
-    }
-    User.find({}, function(err, users) {
-      var userMap = {};
-      users.forEach(function(user) {
-        userMap[user._id] = user;
-      });
-      res.send(userMap);
+app.get('/user', auth, (req, res, err) => {
+  User.find({}, function(err, users) {
+    var userMap = {};
+    users.forEach(function(user) {
+    userMap[user._id] = user;
     });
+    res.send(userMap);
   });
 });
 
 // Get an individual user
 // Only the user or an admin should have access to this
-app.get('/user/:id', (req, res) => {
+app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id;
-  console.log('get user-id', id);
   User.findById(id, function(err, user) {
     if(!user){
       return res.status(404).json({'message':'User not found'});
     }
     if(err){
       return res.status(500).json({'message': 'Internal server error'});
+    }
+    if(req.user.email !== user.email) {
+      return res.status(401).json({'message': 'Unauthorized'})
     }
     res.send(user);
   });
@@ -109,15 +104,20 @@ app.get('/user/:id', (req, res) => {
 
 // Delete a user.
 // Only the user or an admin shold have access to this
-app.delete('/user/:id', (req, res) => {
+app.delete('/user/:id', auth, (req, res) => {
   var id = req.params.id;
-  console.log('delete user-id', id);
   User.findByIdAndRemove(id, function(err, user) {
     if(err){
       return res.status(500).json({'message': 'Internal server error'});
     }
     res.status(204).json();
   });
+});
+
+app.use(function (err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {
+    res.status(401).send({'message': 'Invalid token'});
+  }
 });
 
 app.listen(3000);
