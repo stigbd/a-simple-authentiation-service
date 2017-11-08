@@ -31,7 +31,9 @@ app.post('/user', function(req, res){
   var passwordToSave = bcrypt.hashSync(req.body.password, 10);
   let user = new User({
     email: req.body.email,
-    password: passwordToSave
+    password: passwordToSave,
+    admin: req.body.admin,
+    name: req.body.name
   });
   user.save(function(err, data){
     if(err){
@@ -57,7 +59,12 @@ app.post('/authenticate', function(req, res){
       return res.status(404).json({'message': 'Password does not match'});
     }
     console.log(user);
-    let token = jsonwebtoken.sign(user, process.env.SECRET, {
+    var payload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    let token = jsonwebtoken.sign(payload, process.env.SECRET, {
       expiresIn: 1440 // expires in 1 hour
     });
     res.json({error: false, token: token});
