@@ -17,7 +17,10 @@ app.use(morgan('combined'));
 mongoose.Promise = global.Promise;
 
 // Set up mongodb connection
-mongoose.connect("mongodb://localhost/demo", {useMongoClient: true});
+mongoose.connect("mongodb://localhost/demo", {useMongoClient: true})
+  .catch(function(error){
+    console.error('Error connecting to mongodb: ', error.message);
+  });
 
 // ===== Public Routes =====
 
@@ -77,6 +80,9 @@ var auth = jwt({ secret: process.env.SECRET});
 // Get a list of users
 // Only users with admin-role should have access to this
 app.get('/user', auth, (req, res, err) => {
+  if(!user.admin) {
+    res.status(403).json({'message' : 'Forbidden'});
+  }
   User.find({}, function(err, users) {
     var userMap = {};
     users.forEach(function(user) {
