@@ -1,3 +1,4 @@
 -   do not send password in response to client
 -   protect list all users (only users with admin-role should have access)
 -   implement change user, i.e. change password
+-   prevent the creation of admin user via api

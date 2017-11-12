@@ -1,6 +1,7 @@
 'use strict';
 
 let express = require('express');
+let cors = require('cors');
 let app = express();
 let morgan = require('morgan');
 let mongoose = require('mongoose');
@@ -14,6 +15,7 @@ let dotenv = require('dotenv').config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('combined'));
+app.use(cors());
 mongoose.Promise = global.Promise;
 
 // Set up mongodb connection
@@ -79,10 +81,14 @@ var auth = jwt({ secret: process.env.SECRET});
 
 // Get a list of users
 // Only users with admin-role should have access to this
-app.get('/user', auth, (req, res, err) => {
-  if(!user.admin) {
-    res.status(403).json({'message' : 'Forbidden'});
-  }
+app.get('/user', auth, (req, res) => {
+  // if(err) {
+  //   console.error('Error: ', err);
+  //   res.status(400).json({'message': err.message});
+  // }
+  // if(!req.user.admin) {
+  //   res.status(403).json({'message' : 'Forbidden'});
+  // }
   User.find({}, function(err, users) {
     var userMap = {};
     users.forEach(function(user) {
@@ -133,5 +139,5 @@ app.use(function (err, req, res, next) {
   }
 });
 
-app.listen(3000);
-console.log('Listening on localhost:3000');
+app.listen(3003);
+console.log('Listening on localhost:3003');
