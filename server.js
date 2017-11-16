@@ -91,14 +91,14 @@ app.get('/user', auth, (req, res) => {
   // }
   User.find({}, function(err, users) {
     var userMap = {};
-    var payload = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      admin: user.admin
-    };
-    userMap[user._id] = payload;
     users.forEach(function(user) {
+      var payload = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        admin: user.admin
+      };
+      userMap[user._id] = payload;
     });
     res.send(userMap);
   });
