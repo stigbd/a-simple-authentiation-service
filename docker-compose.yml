@@ -1,6 +1,10 @@
 version: "3"
 services:
-  server:
+  authentication-server:
     build: .
     ports:
       - "3003:3003"
+  database:
+    image: mongo
+    ports:
+      - "27017:27017"

@@ -19,7 +19,7 @@ app.use(cors());
 mongoose.Promise = global.Promise;
 
 // Set up mongodb connection
-mongoose.connect("mongodb://localhost/demo", {useMongoClient: true})
+mongoose.connect("mongodb://database:27017/demo", {useMongoClient: true})
   .catch(function(error){
     console.error('Error connecting to mongodb: ', error.message);
   });
@@ -92,7 +92,6 @@ app.get('/user', auth, (req, res) => {
   User.find({}, function(err, users) {
     var userMap = {};
     users.forEach(function(user) {
-    userMap[user._id] = user;
     });
     res.send(userMap);
   });
