@@ -91,6 +91,13 @@ app.get('/user', auth, (req, res) => {
   // }
   User.find({}, function(err, users) {
     var userMap = {};
+    var payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    userMap[user._id] = payload;
     users.forEach(function(user) {
     });
     res.send(userMap);
@@ -111,7 +118,13 @@ app.get('/user/:id', auth, (req, res) => {
     if(req.user.email !== user.email) {
       return res.status(401).json({'message': 'Unauthorized'})
     }
-    res.send(user);
+    var payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    res.send(payload);
   });
 });
 
