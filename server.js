@@ -18,8 +18,15 @@ app.use(morgan('combined'));
 app.use(cors());
 mongoose.Promise = global.Promise;
 
-// Set up mongodb connection
-mongoose.connect("mongodb://database:27017/demo", {useMongoClient: true})
+// Set up mongodb connection 
+let dbConnectionString =
+  'mongodb://'
+  + process.env.DBHOST
+  + ':'
+  + process.env.DBPORT
+  + '/'
+  + process.env.DATABASE;
+mongoose.connect(dbConnectionString, {useMongoClient: true})
   .catch(function(error){
     console.error('Error connecting to mongodb: ', error.message);
   });
@@ -44,7 +51,7 @@ app.post('/user', function(req, res){
     if(err){
       return res.json({error: true});
     }
-    res.json({error:false})
+    res.status(201).location('/user/' + user.id).send();
   });
 });
 
@@ -151,5 +158,5 @@ app.use(function (err, req, res, next) {
   }
 });
 
-app.listen(3003);
-console.log('Listening on localhost:3003');
+app.listen(process.env.PORT);
+console.log('Listening on ', process.env.HOST + ':' + process.env.PORT);
