@@ -18,7 +18,7 @@ app.use(morgan('combined'));
 app.use(cors());
 mongoose.Promise = global.Promise;
 
-// Set up mongodb connection 
+// Set up mongodb connection
 let dbConnectionString =
   'mongodb://'
   + process.env.DBHOST

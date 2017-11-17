@@ -5,4 +5,5 @@
 -   [ ] prevent the creation of admin user via api
 -   [X] port number should be configurable
 -   [X] Return 201 Created on posts with uri in location header
--   [X] DBhost and port should be configurable 
+-   [X] DBhost and port should be configurable
+-   [ ] Fix error when returning error
