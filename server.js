@@ -89,13 +89,9 @@ var auth = jwt({ secret: process.env.SECRET});
 // Get a list of users
 // Only users with admin-role should have access to this
 app.get('/user', auth, (req, res) => {
-  // if(err) {
-  //   console.error('Error: ', err);
-  //   res.status(400).json({'message': err.message});
-  // }
-  // if(!req.user.admin) {
-  //   res.status(403).json({'message' : 'Forbidden'});
-  // }
+  if(!req.user.admin) {
+   return res.status(403).send();
+  }
   User.find({}, function(err, users) {
     var userMap = {};
     users.forEach(function(user) {
@@ -117,13 +113,13 @@ app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id;
   User.findById(id, function(err, user) {
     if(!user){
-      return res.status(404).json({'message':'User not found'});
+      return res.status(404).send();
     }
     if(err){
       return res.status(500).json({'message': 'Internal server error'});
     }
     if(req.user.email !== user.email) {
-      return res.status(401).json({'message': 'Unauthorized'})
+      return res.status(401).send();
     }
     var payload = {
       id: user.id,
@@ -135,10 +131,27 @@ app.get('/user/:id', auth, (req, res) => {
   });
 });
 
-// Update user (i.e. only password can be changed for now)
-//app.put('/user', function(req, res){
-//  return res.status()
-//});
+// Update user (i.e. only name and password can be changed for now)
+app.put('/user/:id', auth, (req, res) => {
+  let user = User.findById(id, function(err, user) {
+    if(err) {
+      return res.status(500).json({'message': 'Internal server error'});
+    }
+    if(!user) {
+      return res.status(404).send();
+    }
+    var passwordToSave = bcrypt.hashSync(req.body.password, 10);
+    user.name = req.body.name;
+    user.password = passwordToSave;
+    user.save(function(err, data){
+      if(err){
+        return res.json({error: true});
+      }
+      res.status(201).location('/user/' + user.id).send();
+    });
+  })
+  res.status(204).send();
+});
 
 // Delete a user.
 // Only the user or an admin shold have access to this
@@ -148,7 +161,10 @@ app.delete('/user/:id', auth, (req, res) => {
     if(err){
       return res.status(500).json({'message': 'Internal server error'});
     }
-    res.status(204).json();
+    if(!user) {
+      return res.status(404).send();
+    }
+    res.status(204).send();
   });
 });
 
