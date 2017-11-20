@@ -65,10 +65,10 @@ app.post('/authenticate', function(req, res){
       return res.json({error: true});
     }
     if(!user){
-      return res.status(404).json({'message':'User not found'});
+      return res.status(401).json({'message':'User not found'});
     }
     if(!bcrypt.compareSync(req.body.password, user.password)){
-      return res.status(404).json({'message': 'Password does not match'});
+      return res.status(401).json({'message': 'Password does not match'});
     }
     console.log(user);
     var payload = {
@@ -133,6 +133,7 @@ app.get('/user/:id', auth, (req, res) => {
 
 // Update user (i.e. only name and password can be changed for now)
 app.put('/user/:id', auth, (req, res) => {
+  var id = req.params.id;
   let user = User.findById(id, function(err, user) {
     if(err) {
       return res.status(500).json({'message': 'Internal server error'});
@@ -147,7 +148,6 @@ app.put('/user/:id', auth, (req, res) => {
       if(err){
         return res.json({error: true});
       }
-      res.status(201).location('/user/' + user.id).send();
     });
   })
   res.status(204).send();
