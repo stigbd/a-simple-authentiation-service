@@ -6,3 +6,8 @@ Inspired by <https://ciphertrick.com/2017/01/11/token-based-authentication-node-
 
 Use ```docker run -p 127.0.0.1:27017:27017 --name some-mongo -d mongo```
 to start mongodb
+
+
+## Testing
+Use mocha and chai-http for testing:
+<http://chaijs.com/plugins/chai-http/>
