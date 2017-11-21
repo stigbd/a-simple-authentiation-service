@@ -49,7 +49,7 @@ app.post('/user', function(req, res){
   });
   user.save(function(err, data){
     if(err){
-      return res.json({error: true});
+      return res.status(500).json({error: true});
     }
     res.status(201).location('/user/' + user.id).send();
   });
@@ -62,7 +62,7 @@ app.post('/authenticate', function(req, res){
   };
   User.findOne(data).lean().exec(function(err, user){
     if(err){
-      return res.json({error: true});
+      return res.status(500).json({error: true});
     }
     if(!user){
       return res.status(401).json({'message':'User not found'});
@@ -90,7 +90,7 @@ var auth = jwt({ secret: process.env.SECRET});
 // Only users with admin-role should have access to this
 app.get('/user', auth, (req, res) => {
   if(!req.user.admin) {
-   return res.status(403).send();
+   return res.sendStatus(403);
   }
   User.find({}, function(err, users) {
     var userMap = {};
@@ -113,13 +113,13 @@ app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id;
   User.findById(id, function(err, user) {
     if(!user){
-      return res.status(404).send();
+      return res.sendStatus(404);
     }
     if(err){
-      return res.status(500).json({'message': 'Internal server error'});
+      return res.sendStatus(500);
     }
     if(req.user.email !== user.email) {
-      return res.status(401).send();
+      return res.sendStatus(401);
     }
     var payload = {
       id: user.id,
@@ -136,21 +136,21 @@ app.put('/user/:id', auth, (req, res) => {
   var id = req.params.id;
   let user = User.findById(id, function(err, user) {
     if(err) {
-      return res.status(500).json({'message': 'Internal server error'});
+      return res.sendStatus(500);
     }
     if(!user) {
-      return res.status(404).send();
+      return res.sendStatus(404);
     }
     var passwordToSave = bcrypt.hashSync(req.body.password, 10);
     user.name = req.body.name;
     user.password = passwordToSave;
     user.save(function(err, data){
       if(err){
-        return res.json({error: true});
+        return res.sendStatus(500);
       }
     });
   })
-  res.status(204).send();
+  res.sendStatus(204);
 });
 
 // Delete a user.
@@ -158,13 +158,10 @@ app.put('/user/:id', auth, (req, res) => {
 app.delete('/user/:id', auth, (req, res) => {
   var id = req.params.id;
   User.findByIdAndRemove(id, function(err, user) {
-    if(err){
-      return res.status(500).json({'message': 'Internal server error'});
-    }
     if(!user) {
-      return res.status(404).send();
+      return res.sendStatus(404);
     }
-    res.status(204).send();
+    res.sendStatus(204);
   });
 });
 

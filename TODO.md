@@ -1,7 +1,7 @@
 -   [X] do not send password in response to client
 -   [X] do not send password in jwt to client
--   [ ] protect list all users (only users with admin-role should have access)
--   [ ] implement change user, i.e. change password
+-   [X] protect list all users (only users with admin-role should have access)
+-   [X] implement change user, i.e. change password
 -   [ ] prevent the creation of admin user via api
 -   [X] port number should be configurable
 -   [X] Return 201 Created on posts with uri in location header
