@@ -7,3 +7,4 @@
 -   [X] Return 201 Created on posts with uri in location header
 -   [X] DBhost and port should be configurable
 -   [ ] Fix error when returning error
+-   [ ] Add tests
