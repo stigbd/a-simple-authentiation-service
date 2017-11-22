@@ -1,7 +1,20 @@
+let mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+let User = require('../models/user');
 var chai = require('chai');
 var chaiHttp = require('chai-http');
+var jwt = require('jsonwebtoken');
 let should = chai.should();
+let dotenv = require('dotenv').config();
 chai.use(chaiHttp);
+
+before(function (done) {
+  mongoose.connect('mongodb://localhost/test', {useMongoClient: true}, done);
+});
+
+after(function(){
+  mongoose.connection.close()
+});
 
 describe('/', () => {
   describe('GET /', () => {
@@ -20,8 +33,34 @@ describe('/', () => {
 });
 
 describe('/user', () => {
+  before(function(done) {
+    let user = new User({
+      email: 'req.body.email',
+      password: 'passwordToSave',
+      admin: 'req.body.admin',
+      name: 'req.body.name'
+      });
+    user.save(done);
+  });
+
   describe('/GET user', () => {
-    it('should return status code 401 with no Authentication header');
+    it('should return status code 200 and a list of users when valid jwt and user is admin', () => {
+      var token = jwt.sign({
+        id: 1,
+      }, process.env.SECRET, { expiresIn: 60*60 });
+      return chai.request('http://localhost:3003')
+      .get('/user')
+      .set('Authorization', token)
+      .then(res => {
+        res.should.have.status(200);
+        // check for valid list
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+
     it('should return status code 401 when GET user with invalid jwt', () => {
       return chai.request('http://localhost:3003')
       .get("/user")
@@ -34,7 +73,6 @@ describe('/user', () => {
       });
     });
     it('should return status code 403 when user not admin');
-    it('should return status code 200 and a list of users when user is admin');
   });
   describe('/POST user', () => {
     it('should return status code 201 and location header when posting new user');
@@ -52,7 +90,7 @@ describe('/user/:id', () => {
 
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
-    it('should return status code 401 with bad username/password');
     it('should return status code 200 and a jwt when good username/password');
+    it('should return status code 401 with bad username/password');
   });
 });
