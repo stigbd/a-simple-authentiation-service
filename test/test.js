@@ -8,18 +8,19 @@ let should = chai.should();
 let dotenv = require('dotenv').config();
 chai.use(chaiHttp);
 let adminToken, userToken;
+
 let user = new User({
   email: 'user',
   password: 'user',
   admin: false,
   name: 'User'
-  });
-  let admin = new User({
-    email: 'admin',
-    password: 'admin',
-    admin: true,
-    name: 'Admin'
-  });
+});
+let admin = new User({
+  email: 'admin',
+  password: 'admin',
+  admin: true,
+  name: 'Admin'
+});
 
 before(function (done) {
   mongoose.connect('mongodb://localhost/test', {useMongoClient: true}, done);
@@ -92,7 +93,7 @@ describe('/user', () => {
       })
       .catch(err => {
         //console.error(err);
-        //throw err; // Re-throw the error if the test should fail when an error happens
+        throw err; // Re-throw the error if the test should fail when an error happens
       });
     });
     it('should return status code 403 when user not admin', () => {
@@ -105,16 +106,83 @@ describe('/user', () => {
       })
       .catch(err => {
         // console.error(err);
-        // throw err; // Re-throw the error if the test should fail when an error happens
+        throw err; // Re-throw the error if the test should fail when an error happens
       });
     });
   });
 
   describe('/POST user', () => {
-    it('should return status code 201 and location header when posting new user');
-    it('should return status code 400 when username is missing');
-    it('should return status code 400 when password is missing');
-    it('should return status code 400 when duplicate user, i.e. name');
+    it('should return status code 201 and location header when posting new user', () => {
+      return chai.request('http://localhost:3003')
+      .post('/user')
+      .send(user)
+      .then(res => {
+        res.should.have.status(201);
+        res.should.have.header('Location');
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 400 when email is missing', () => {
+      return chai.request('http://localhost:3003')
+      .post('/user')
+      .send({
+        password: 'user',
+        admin: false,
+        name: 'User'
+        })
+      .then(res => {
+        console.log(res);
+        res.should.have.status(400);
+        res.should.be.json;
+        res.body.should.have.property("errorName");
+        res.body.errorName.should.equal("ValidationError");
+        res.body.should.have.property("errorMessage");
+        res.body.errorMessage.should.include("`email` is required");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 400 when password is missing', () => {
+      return chai.request('http://localhost:3003')
+      .post('/user')
+      .send({
+        email: 'user',
+        admin: false,
+        name: 'User'
+        })
+      .then(res => {
+        console.log(res);
+        res.should.have.status(400);
+        res.should.be.json;
+        res.body.should.have.property("errorName");
+        res.body.errorName.should.equal("ValidationError");
+        res.body.should.have.property("errorMessage");
+        res.body.errorMessage.should.include("`password` is required");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 400 when duplicate user, i.e. email', () => {
+      return chai.request('http://localhost:3003')
+      .post('/user')
+      .send(user)
+      .then(res => {
+        console.log(res);
+        res.should.have.status(400);
+        res.should.be.json;
+        res.body.should.have.property("errorName");
+        res.body.errorName.should.equal("ValidationError");
+        res.body.should.have.property("errorMessage");
+        res.body.errorMessage.should.include("`password` is required");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
   });
 });
 

@@ -40,15 +40,18 @@ app.get('/', (req, res) => {
 
 // Create a new user
 app.post('/user', function(req, res){
-  var passwordToSave = bcrypt.hashSync(req.body.password, 10);
   let user = new User({
     email: req.body.email,
-    password: passwordToSave,
+    password: req.body.password,
     admin: req.body.admin,
     name: req.body.name
   });
   user.save(function(err, data){
+    if(err && err.name === 'ValidationError'){
+      return res.status(400).json({errorName: err.name, errorMessage: err.message });
+    }
     if(err){
+      console.error(err);
       return res.status(500).json({error: true});
     }
     res.status(201).location('/user/' + user.id).send();

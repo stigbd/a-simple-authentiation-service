@@ -8,3 +8,4 @@
 -   [X] DBhost and port should be configurable
 -   [ ] Fix error when returning error
 -   [ ] Add tests
+-   [ ] Password should be bcrypted as a pre-save hook in model
