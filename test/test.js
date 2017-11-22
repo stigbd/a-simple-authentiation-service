@@ -7,6 +7,19 @@ var jwt = require('jsonwebtoken');
 let should = chai.should();
 let dotenv = require('dotenv').config();
 chai.use(chaiHttp);
+let adminToken, userToken;
+let user = new User({
+  email: 'user',
+  password: 'user',
+  admin: false,
+  name: 'User'
+  });
+  let admin = new User({
+    email: 'admin',
+    password: 'admin',
+    admin: true,
+    name: 'Admin'
+  });
 
 before(function (done) {
   mongoose.connect('mongodb://localhost/test', {useMongoClient: true}, done);
@@ -34,26 +47,36 @@ describe('/', () => {
 
 describe('/user', () => {
   before(function(done) {
-    let user = new User({
-      email: 'req.body.email',
-      password: 'passwordToSave',
-      admin: 'req.body.admin',
-      name: 'req.body.name'
-      });
-    user.save(done);
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    };
+    var userPayload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+    user.save();
+    admin.save();
+    done();
+  });
+
+  after(function(done) {
+    User.collection.drop();
+    done();
   });
 
   describe('/GET user', () => {
     it('should return status code 200 and a list of users when valid jwt and user is admin', () => {
-      var token = jwt.sign({
-        id: 1,
-      }, process.env.SECRET, { expiresIn: 60*60 });
       return chai.request('http://localhost:3003')
       .get('/user')
-      .set('Authorization', token)
+      .set('Authorization', 'Bearer ' + adminToken) // Should Bearer be included?
       .then(res => {
         res.should.have.status(200);
-        // check for valid list
+        res.should.be.json;
       })
       .catch(err => {
         // console.error(err);
@@ -72,12 +95,26 @@ describe('/user', () => {
         //throw err; // Re-throw the error if the test should fail when an error happens
       });
     });
-    it('should return status code 403 when user not admin');
+    it('should return status code 403 when user not admin', () => {
+      return chai.request('http://localhost:3003')
+      .get('/user')
+      .set('Authorization', 'Bearer ' + userToken)
+      .then(res => {
+        res.should.have.status(403);
+        res.should.not.be.json;
+      })
+      .catch(err => {
+        // console.error(err);
+        // throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
   });
+
   describe('/POST user', () => {
     it('should return status code 201 and location header when posting new user');
     it('should return status code 400 when username is missing');
     it('should return status code 400 when password is missing');
+    it('should return status code 400 when duplicate user, i.e. name');
   });
 });
 
