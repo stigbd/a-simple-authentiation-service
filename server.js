@@ -93,18 +93,18 @@ app.post('/authenticate', function(req, res){
   let data = {
     email: req.body.email
   };
-  User.findOne(data).lean().exec(function(err, user){
-    if(err){
-      return res.status(500).json({error: true});
-    }
+  User.find(data, function(err, user) {
     if(!user){
-      return res.status(401).json({'message':'User not found'});
+      return res.sendStatus(404);
     }
-    if(!bcrypt.compareSync(req.body.password, user.password)){
-      return res.status(401).json({'message': 'Password does not match'});
+    if(err){
+      return res.sendStatus(500);
     }
-    console.log(user);
+    if(req.email !== user.email) {
+      return res.sendStatus(401);
+    }
     var payload = {
+      id: user.id,
       name: user.name,
       email: user.email,
       admin: user.admin

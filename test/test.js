@@ -135,7 +135,6 @@ describe('/user', () => {
       done();
     });
     it('should return status code 201 and location header when posting new user', () => {
-      user.email = 'newUser';
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
@@ -188,7 +187,6 @@ describe('/user', () => {
       });
     });
     it('should return status code 400 when duplicate user, i.e. email', () => {
-      user.email = 'newUser';
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
@@ -216,8 +214,67 @@ describe('/user/:id', () => {
 
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
-    it('should return status code 200 and a jwt when good username/password');
-    it('should return status code 401 and message with bad username');
-    it('should return status code 401 and message with bad password');
+    before(function(done) {
+      User.collection.remove(function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      user.save(function(err, data){
+        if(err){
+          console.error(err);
+        }
+        console.log('user saved!')
+        done();
+      });
+    });
+    it('should return status code 200 and a jwt when good username/password', () => {
+      return chai.request('http://localhost:3003')
+      .post('/authenticate')
+      .send({
+        email: user.email,
+        password: user.password
+        })
+      .then(res => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.have.property("token");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 401 and message with bad username', () => {
+      return chai.request('http://localhost:3003')
+      .post('/authenticate')
+      .send({
+        email: 'badUsername',
+        password: user.password
+        })
+      .then(res => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.have.property("token");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 401 and message with bad password', () => {
+      return chai.request('http://localhost:3003')
+      .post('/authenticate')
+      .send({
+        email: user.email,
+        password: 'badPassword'
+        })
+      .then(res => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.have.property("token");
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
   });
 });
