@@ -23,7 +23,21 @@ let admin = new User({
 });
 
 before(function (done) {
-  mongoose.connect('mongodb://localhost/test', {useMongoClient: true}, done);
+  dbConnectionString =
+  'mongodb://'
+  + process.env.DBHOST
+  + ':'
+  + process.env.DBPORT
+  + '/'
+  + process.env.TEST_DATABASE;
+  mongoose.connect(dbConnectionString, {useMongoClient: true}, function(err, db) {
+    if (err) {
+        console.error('Error connecting to mongodb: ', error.message);
+    } else {
+      console.log('Connected to the following db: ', dbConnectionString);
+    }
+  });
+  done();
 });
 
 after(function(){
@@ -66,7 +80,7 @@ describe('/user', () => {
   });
 
   after(function(done) {
-    User.collection.drop();
+    User.collection.remove();
     done();
   });
 
@@ -112,7 +126,16 @@ describe('/user', () => {
   });
 
   describe('/POST user', () => {
+    before(function(done) {
+      User.collection.remove(function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      done();
+    });
     it('should return status code 201 and location header when posting new user', () => {
+      user.email = 'newUser';
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
@@ -128,12 +151,11 @@ describe('/user', () => {
       return chai.request('http://localhost:3003')
       .post('/user')
       .send({
-        password: 'user',
+        password: 'userWithEmailMissing',
         admin: false,
         name: 'User'
         })
       .then(res => {
-        console.log(res);
         res.should.have.status(400);
         res.should.be.json;
         res.body.should.have.property("errorName");
@@ -149,12 +171,11 @@ describe('/user', () => {
       return chai.request('http://localhost:3003')
       .post('/user')
       .send({
-        email: 'user',
+        email: 'userWithPasswordMissing',
         admin: false,
         name: 'User'
         })
       .then(res => {
-        console.log(res);
         res.should.have.status(400);
         res.should.be.json;
         res.body.should.have.property("errorName");
@@ -167,17 +188,17 @@ describe('/user', () => {
       });
     });
     it('should return status code 400 when duplicate user, i.e. email', () => {
+      user.email = 'newUser';
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
       .then(res => {
-        console.log(res);
         res.should.have.status(400);
         res.should.be.json;
         res.body.should.have.property("errorName");
-        res.body.errorName.should.equal("ValidationError");
+        res.body.errorName.should.equal("DuplicationError");
         res.body.should.have.property("errorMessage");
-        res.body.errorMessage.should.include("`password` is required");
+        res.body.errorMessage.should.include("User already exists");
       })
       .catch(err => {
         throw err; // Re-throw the error if the test should fail when an error happens
@@ -196,6 +217,7 @@ describe('/user/:id', () => {
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
     it('should return status code 200 and a jwt when good username/password');
-    it('should return status code 401 with bad username/password');
+    it('should return status code 401 and message with bad username');
+    it('should return status code 401 and message with bad password');
   });
 });

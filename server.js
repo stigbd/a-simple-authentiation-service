@@ -19,17 +19,32 @@ app.use(cors());
 mongoose.Promise = global.Promise;
 
 // Set up mongodb connection
-let dbConnectionString =
+let dbConnectionString;
+if(process.env.NODE_ENV === 'test') {
+  dbConnectionString =
+  'mongodb://'
+  + process.env.DBHOST
+  + ':'
+  + process.env.DBPORT
+  + '/'
+  + process.env.TEST_DATABASE;
+}
+if(process.env.NODE_ENV !== 'test') {
+  dbConnectionString =
   'mongodb://'
   + process.env.DBHOST
   + ':'
   + process.env.DBPORT
   + '/'
   + process.env.DATABASE;
-mongoose.connect(dbConnectionString, {useMongoClient: true})
-  .catch(function(error){
-    console.error('Error connecting to mongodb: ', error.message);
-  });
+}
+mongoose.connect(dbConnectionString, {useMongoClient: true}, function(err, db) {
+  if (err) {
+      console.error('Error connecting to mongodb: ', error.message);
+  } else {
+    console.log('Connected to the following db: ', dbConnectionString);
+  }
+});
 
 // ===== Public Routes =====
 
@@ -40,21 +55,36 @@ app.get('/', (req, res) => {
 
 // Create a new user
 app.post('/user', function(req, res){
-  let user = new User({
-    email: req.body.email,
-    password: req.body.password,
-    admin: req.body.admin,
-    name: req.body.name
-  });
-  user.save(function(err, data){
-    if(err && err.name === 'ValidationError'){
-      return res.status(400).json({errorName: err.name, errorMessage: err.message });
-    }
+  let data = {
+    email: req.body.email
+  };
+  if(!data.email) {
+    return res.status(400).json({errorName: 'ValidationError', errorMessage: '`email` is required' });
+  }
+  User.findOne(data).lean().exec(function(err, existingUser){
     if(err){
-      console.error(err);
       return res.status(500).json({error: true});
     }
-    res.status(201).location('/user/' + user.id).send();
+    if(existingUser){
+      console.log('Existing user', existingUser);
+      return res.status(400).json({'errorName': 'DuplicationError', 'errorMessage': 'User already exists'});
+    }
+    let newUser = new User({
+      email: req.body.email,
+      password: req.body.password,
+      admin: req.body.admin,
+      name: req.body.name
+    });
+    newUser.save(function(err, data){
+      if(err && err.name === 'ValidationError'){
+        return res.status(400).json({errorName: err.name, errorMessage: err.message });
+      }
+      if(err){
+        console.error(err);
+        return res.status(500).json({error: true});
+      }
+      res.status(201).location('/user/' + newUser.id).send();
+    });
   });
 });
 
@@ -83,7 +113,7 @@ app.post('/authenticate', function(req, res){
       expiresIn: 1440 // expires in 1 hour
     });
     res.json({error: false, token: token});
-  })
+  });
 });
 
 // ===== Protected Routes =====
