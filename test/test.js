@@ -89,7 +89,7 @@ describe('/user', () => {
   });
 
   describe('/GET user', () => {
-    it('should return status code 200 and a list of users when valid jwt and user is admin', () => {
+    it('should return status code 200 and a list of users when GET user valid jwt and user is admin', () => {
       return chai.request('http://localhost:3003')
       .get('/user')
       .set('Authorization', 'Bearer ' + adminToken) // Should Bearer be included?
@@ -209,17 +209,25 @@ describe('/user', () => {
   });
 });
 
-describe('/user/:id', () => {
+describe.only('/user/:id', () => {
+
   let adminId, userId;
-  before(function(done) {
-    user.save(function(err, data){
-      if(!err){
-        userId = data._id;
-      }
-    });
-    admin.save(function(err, data){
-      if(!err){
-        adminId = data._id;
+  console.log('user', user);
+
+  before(function (done) {
+    user.save( function (res) {
+      userId = user.id;
+    }); // It is now guaranteed to finish before 'it' starts.
+    admin.save( function (res) {
+      adminId = admin.id;
+      done();
+    }); // It is now guaranteed to finish before 'it' starts.
+  });
+
+  after(function(done) {
+    User.find({}).remove(function(err, removed) {
+      if(err) {
+        console.error(err);
       }
     });
     done();
@@ -227,9 +235,10 @@ describe('/user/:id', () => {
 
   describe('/GET user/:id', () => {
     it('should return status code 200 and a user-object when good jwt and user is identical to caller', () => {
+      console.log('Testing GET user:', userId);
       return chai.request('http://localhost:3003')
-      .get('/user/' + adminId)
-      .set('Authorization', 'Bearer ' + adminToken)
+      .get('/user/' + userId)
+      .set('Authorization', 'Bearer ' + userToken)
       .then(res => {
         res.should.have.status(200);
         res.should.be.json;
@@ -270,8 +279,8 @@ describe('/user/:id', () => {
     });
     it('should return status code 403 when user is different from caller', () => {
       return chai.request('http://localhost:3003')
-      .get('/user/' + userId)
-      .set('Authorization', 'Bearer ' + adminToken)
+      .get('/user/' + adminId)
+      .set('Authorization', 'Bearer ' + userToken)
       .then(res => {
         res.should.have.status(403);
         res.should.be.json;
