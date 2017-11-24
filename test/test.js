@@ -21,6 +21,18 @@ let admin = new User({
   admin: true,
   name: 'Admin'
 });
+var adminPayload = {
+  name: admin.name,
+  email: admin.email,
+  admin: admin.admin
+};
+var userPayload = {
+  name: user.name,
+  email: user.email,
+  admin: user.admin
+};
+adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
 
 before(function (done) {
   dbConnectionString =
@@ -62,25 +74,17 @@ describe('/', () => {
 
 describe('/user', () => {
   before(function(done) {
-    var adminPayload = {
-      name: admin.name,
-      email: admin.email,
-      admin: admin.admin
-    };
-    var userPayload = {
-      name: user.name,
-      email: user.email,
-      admin: user.admin
-    };
-    adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
-    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
     user.save();
     admin.save();
     done();
   });
 
   after(function(done) {
-    User.collection.remove();
+    User.find({}).remove(function(err, removed) {
+      if(err) {
+        console.error(err);
+      }
+    });
     done();
   });
 
@@ -127,7 +131,7 @@ describe('/user', () => {
 
   describe('/POST user', () => {
     before(function(done) {
-      User.collection.remove(function(err, removed) {
+      User.find({}).remove(function(err, removed) {
         if(err) {
           console.error(err);
         }
@@ -206,9 +210,80 @@ describe('/user', () => {
 });
 
 describe('/user/:id', () => {
+  let adminId, userId;
+  before(function(done) {
+    user.save(function(err, data){
+      if(!err){
+        userId = data._id;
+      }
+    });
+    admin.save(function(err, data){
+      if(!err){
+        adminId = data._id;
+      }
+    });
+    done();
+  });
+
   describe('/GET user/:id', () => {
-    it('should return status code 200 and a user-object when good jwt');
-    it('should return status code 403 when user is different from caller');
+    it('should return status code 200 and a user-object when good jwt and user is identical to caller', () => {
+      return chai.request('http://localhost:3003')
+      .get('/user/' + adminId)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .then(res => {
+        res.should.have.status(200);
+        res.should.be.json;
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 404 when nonExistingUser', () => {
+      var id = require('mongoose').Types.ObjectId();
+      return chai.request('http://localhost:3003')
+      .get('/user/' + id)
+      .set('Authorization', 'Bearer ' + userToken)
+      .then(res => {
+        res.should.have.status(404);
+        res.should.not.be.json;
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 401 when bad jwt', () => {
+      return chai.request('http://localhost:3003')
+      .get('/user/' + userId)
+      .set('Authorization', 'Bearer ' + 'badUserToken')
+      .then(res => {
+        res.should.have.status(401);
+        res.should.be.json;
+        res.body.should.have.property("message");
+        res.body.message.should.equal("Invalid token");
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 403 when user is different from caller', () => {
+      return chai.request('http://localhost:3003')
+      .get('/user/' + userId)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .then(res => {
+        res.should.have.status(403);
+        res.should.be.json;
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+  });
+  describe('/PUT user/:id', () => {
+    it('should return status code 204 when user is updated with good jwt');
   });
 });
 
@@ -224,7 +299,6 @@ describe('/authenticate', () => {
         if(err){
           console.error(err);
         }
-        console.log('user saved!')
         done();
       });
     });
