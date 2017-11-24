@@ -140,15 +140,13 @@ app.get('/user', auth, (req, res) => {
 // Only the user or an admin should have access to this
 app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id;
-  User.findById(id, function(err, user) {
-    if(!user){
-      return res.sendStatus(404);
-    }
+  let user = User.findById(id, function(err, user) {
     if(err){
+      console.log(err);
       return res.sendStatus(500);
     }
-    if(req.user.email !== user.email) {
-      return res.sendStatus(401);
+    if(!user){
+      return res.sendStatus(404);
     }
     var payload = {
       id: user.id,
