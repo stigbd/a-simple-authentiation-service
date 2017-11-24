@@ -33,15 +33,15 @@ var userPayload = {
 };
 adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
 userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+dbConnectionString =
+'mongodb://'
++ process.env.DBHOST
++ ':'
++ process.env.DBPORT
++ '/'
++ process.env.TEST_DATABASE;
 
 before(function (done) {
-  dbConnectionString =
-  'mongodb://'
-  + process.env.DBHOST
-  + ':'
-  + process.env.DBPORT
-  + '/'
-  + process.env.TEST_DATABASE;
   mongoose.connect(dbConnectionString, {useMongoClient: true}, function(err, db) {
     if (err) {
         console.error('Error connecting to mongodb: ', error.message);
@@ -52,8 +52,13 @@ before(function (done) {
   done();
 });
 
-after(function(){
-  mongoose.connection.close()
+after(function(done){
+  mongoose.connection.close( function(err) {
+    if(err) {
+      console.error(err);
+    }
+    done();
+  });
 });
 
 describe('/', () => {
@@ -73,11 +78,17 @@ describe('/', () => {
 });
 
 describe('/user', () => {
-  before(function(done) {
-    user.save();
-    admin.save();
-    done();
+
+  before(function (done) {
+    user.save( function (res) {
+      userId = user.id;
+    }); // It is now guaranteed to finish before 'it' starts.
+    admin.save( function (res) {
+      adminId = admin.id;
+      done();
+    }); // It is now guaranteed to finish before 'it' starts.
   });
+
 
   after(function(done) {
     User.find({}).remove(function(err, removed) {
@@ -135,9 +146,18 @@ describe('/user', () => {
         if(err) {
           console.error(err);
         }
+        done();
       });
-      done();
     });
+    after(function(done) {
+      User.find({}).remove(function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+        done();
+      });
+    });
+
     it('should return status code 201 and location header when posting new user', () => {
       return chai.request('http://localhost:3003')
       .post('/user')
@@ -209,17 +229,29 @@ describe('/user', () => {
   });
 });
 
-describe.only('/user/:id', () => {
+describe('/user/:id', () => {
 
   let adminId, userId;
   console.log('user', user);
 
+  let getIdUser = new User({
+    email: 'user',
+    password: 'user',
+    admin: false,
+    name: 'User'
+  });
+  let getIdAdmin = new User({
+    email: 'admin',
+    password: 'admin',
+    admin: false,
+    name: 'Admin'
+  });
   before(function (done) {
-    user.save( function (res) {
-      userId = user.id;
+    getIdUser.save( function (res) {
+      userId = getIdUser.id;
     }); // It is now guaranteed to finish before 'it' starts.
-    admin.save( function (res) {
-      adminId = admin.id;
+    getIdAdmin.save( function (res) {
+      adminId = getIdAdmin.id;
       done();
     }); // It is now guaranteed to finish before 'it' starts.
   });
@@ -229,8 +261,8 @@ describe.only('/user/:id', () => {
       if(err) {
         console.error(err);
       }
+      done();
     });
-    done();
   });
 
   describe('/GET user/:id', () => {
@@ -299,17 +331,20 @@ describe.only('/user/:id', () => {
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
     before(function(done) {
-      User.collection.remove(function(err, removed) {
-        if(err) {
-          console.error(err);
-        }
-      });
       user.save(function(err, data){
         if(err){
           console.error(err);
         }
         done();
       });
+    });
+    after(function(done) {
+      User.find({}).remove(function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      done();
     });
     it('should return status code 200 and a jwt when good username/password', () => {
       return chai.request('http://localhost:3003')
