@@ -61,30 +61,26 @@ app.post('/user', function(req, res){
   if(!data.email) {
     return res.status(400).json({errorName: 'ValidationError', errorMessage: '`email` is required' });
   }
-  User.findOne(data).lean().exec(function(err, existingUser){
+  let newUser = new User({
+    email: req.body.email,
+    password: req.body.password,
+    admin: req.body.admin,
+    name: req.body.name
+  });
+  newUser.save(function(err, data){
+    if(err && err.name === 'MongoError' && err.message.includes('E11000')){
+      err.name = 'DuplicationError';
+      err.message = 'User already exists';
+      return res.status(400).json({errorName: err.name, errorMessage: err.message });
+    }
+    if(err && err.name === 'ValidationError'){
+      return res.status(400).json({errorName: err.name, errorMessage: err.message });
+    }
     if(err){
+      console.error(err);
       return res.status(500).json({error: true});
     }
-    if(existingUser){
-      console.log('Existing user', existingUser);
-      return res.status(400).json({'errorName': 'DuplicationError', 'errorMessage': 'User already exists'});
-    }
-    let newUser = new User({
-      email: req.body.email,
-      password: req.body.password,
-      admin: req.body.admin,
-      name: req.body.name
-    });
-    newUser.save(function(err, data){
-      if(err && err.name === 'ValidationError'){
-        return res.status(400).json({errorName: err.name, errorMessage: err.message });
-      }
-      if(err){
-        console.error(err);
-        return res.status(500).json({error: true});
-      }
-      res.status(201).location('/user/' + newUser.id).send();
-    });
+    res.status(201).location('/user/' + newUser.id).send();
   });
 });
 
