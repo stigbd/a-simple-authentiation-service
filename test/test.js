@@ -283,7 +283,7 @@ describe.only('/user/:id', () => {
       .set('Authorization', 'Bearer ' + userToken)
       .then(res => {
         res.should.have.status(403);
-        res.should.be.json;
+        res.should.not.be.json;
       })
       .catch(err => {
         // console.error(err);
