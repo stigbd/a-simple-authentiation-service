@@ -168,21 +168,21 @@ app.put('/user/:id', auth, (req, res) => {
   var id = req.params.id;
   let user = User.findById(id, function(err, user) {
     if(err) {
+      console.error(err);
       return res.sendStatus(500);
     }
     if(!user) {
       return res.sendStatus(404);
     }
-    var passwordToSave = bcrypt.hashSync(req.body.password, 10);
     user.name = req.body.name;
-    user.password = passwordToSave;
+    user.password = req.body.password;
     user.save(function(err, data){
       if(err){
         return res.sendStatus(500);
       }
     });
-  })
-  res.sendStatus(204);
+    res.sendStatus(204);
+  });
 });
 
 // Delete a user.

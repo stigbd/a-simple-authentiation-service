@@ -18,7 +18,7 @@ dbConnectionString ='mongodb://'
 before(function (done) {
   mongoose.connect(dbConnectionString, {useMongoClient: true}, function(err, db) {
     if (err) {
-        console.error('Error connecting to mongodb: ', error.message);
+      console.error('Error connecting to mongodb: ', error.message);
     } else {
       console.log('Connected to the following db: ', dbConnectionString);
     }
@@ -53,54 +53,64 @@ describe('/', () => {
 });
 
 describe('/user', () => {
-  let adminToken, userToken;
-
-  before(function (done) {
-    let user = new User({
-      email: 'user',
-      password: 'user',
-      admin: false,
-      name: 'User'
-    });
-    let admin = new User({
-      email: 'admin',
-      password: 'admin',
-      admin: true,
-      name: 'Admin'
-    });
-    var adminPayload = {
-      name: admin.name,
-      email: admin.email,
-      admin: admin.admin
-    };
-    var userPayload = {
-      name: user.name,
-      email: user.email,
-      admin: user.admin
-    };
-    adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
-    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
-
-    user.save( function (res) {
-      userId = user.id;
-    }); // It is now guaranteed to finish before 'it' starts.
-    admin.save( function (res) {
-      adminId = admin.id;
-      done();
-    }); // It is now guaranteed to finish before 'it' starts.
-  });
-
-
-  after(function(done) {
-    User.find({}).remove(function(err, removed) {
-      if(err) {
-        console.error(err);
-      }
-    });
-    done();
-  });
-
   describe('/GET user', () => {
+    let adminToken, userToken;
+
+    before(function (done) {
+      let user = new User({
+        email: 'user',
+        password: 'user',
+        admin: false,
+        name: 'User'
+      });
+      let admin = new User({
+        email: 'admin',
+        password: 'admin',
+        admin: true,
+        name: 'Admin'
+      });
+      var adminPayload = {
+        name: admin.name,
+        email: admin.email,
+        admin: admin.admin
+      };
+      var userPayload = {
+        name: user.name,
+        email: user.email,
+        admin: user.admin
+      };
+      adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+      userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
+      user.save( function (err, res) {
+        if(err) {
+          console.error(err);
+        }
+        userId = user.id;
+      }); // It is now guaranteed to finish before 'it' starts.
+      admin.save( function (err, res) {
+        if(err) {
+          console.error(err);
+        }
+        adminId = admin.id;
+        done();
+      }); // It is now guaranteed to finish before 'it' starts.
+    });
+
+
+    after(function(done) {
+      User.findByIdAndRemove(userId, function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      User.findByIdAndRemove(adminId, function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      done();
+    });
     it('should return status code 200 and a list of users when GET user valid jwt and user is admin', () => {
       return chai.request('http://localhost:3003')
       .get('/user')
@@ -142,16 +152,9 @@ describe('/user', () => {
   });
 
   describe('/POST user', () => {
-    before(function(done) {
-      User.find({}).remove(function(err, removed) {
-        if(err) {
-          console.error(err);
-        }
-        done();
-      });
-    });
+    let userId;
     after(function(done) {
-      User.find({}).remove(function(err, removed) {
+      User.findOneAndRemove({email: 'newUser'}, function(err, removed) {
         if(err) {
           console.error(err);
         }
@@ -161,7 +164,7 @@ describe('/user', () => {
 
     it('should return status code 201 and location header when posting new user', () => {
       let user = new User({
-        email: 'user',
+        email: 'newUser',
         password: 'user',
         admin: false,
         name: 'User'
@@ -184,7 +187,7 @@ describe('/user', () => {
         password: 'userWithEmailMissing',
         admin: false,
         name: 'User'
-        })
+      })
       .then(res => {
         res.should.have.status(400);
         res.should.be.json;
@@ -204,7 +207,7 @@ describe('/user', () => {
         email: 'userWithPasswordMissing',
         admin: false,
         name: 'User'
-        })
+      })
       .then(res => {
         res.should.have.status(400);
         res.should.be.json;
@@ -243,54 +246,65 @@ describe('/user', () => {
 });
 
 describe('/user/:id', () => {
-
-  let adminId, userId;
-
-  let user = new User({
-    email: 'user',
-    password: 'user',
-    admin: false,
-    name: 'User'
-  });
-  let admin = new User({
-    email: 'admin',
-    password: 'admin',
-    admin: false,
-    name: 'Admin'
-  });
-  var adminPayload = {
-    name: admin.name,
-    email: admin.email,
-    admin: admin.admin
-  };
-  var userPayload = {
-    name: user.name,
-    email: user.email,
-    admin: user.admin
-  };
-  adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
-  userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
-
-  before(function (done) {
-    user.save( function (res) {
-      userId = user.id;
-    }); // It is now guaranteed to finish before 'it' starts.
-    admin.save( function (res) {
-      adminId = admin.id;
-      done();
-    }); // It is now guaranteed to finish before 'it' starts.
-  });
-
-  after(function(done) {
-    User.find({}).remove(function(err, removed) {
-      if(err) {
-        console.error(err);
-      }
-      done();
-    });
-  });
-
   describe('/GET user/:id', () => {
+
+    let adminId, userId;
+
+    let user = new User({
+      email: 'user',
+      password: 'user',
+      admin: false,
+      name: 'User'
+    });
+    let admin = new User({
+      email: 'admin',
+      password: 'admin',
+      admin: false,
+      name: 'Admin'
+    });
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    };
+    var userPayload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
+    before(function (done) {
+      user.save( function (err, res) {
+        if(err) {
+          console.error(err);
+        }
+        userId = user.id;
+      }); // It is now guaranteed to finish before 'it' starts.
+      admin.save( function (err, res) {
+        if(err) {
+          console.error(err);
+        }
+        adminId = admin.id;
+        done();
+      }); // It is now guaranteed to finish before 'it' starts.
+    });
+
+    after(function(done) {
+      User.findByIdAndRemove(userId, function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+      });
+      User.findByIdAndRemove(adminId, function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+        done();
+      });
+    });
+
     it('should return status code 200 and a user-object when good jwt and user is identical to caller', () => {
       console.log('Testing GET user:', userId);
       return chai.request('http://localhost:3003')
@@ -348,14 +362,120 @@ describe('/user/:id', () => {
       });
     });
   });
+
   describe('/PUT user/:id', () => {
-    it('should return status code 204 when user is updated with good jwt');
+    let userId;
+
+    let user = new User({
+      email: 'user',
+      password: 'user',
+      admin: false,
+      name: 'User'
+    });
+    var userPayload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
+    before(function (done) {
+      user.save( function (err, res) {
+        if(err) {
+          console.error(err);
+          throw err;
+        }
+        userId = user.id;
+        done();
+      }); // It is now guaranteed to finish before 'it' starts.
+    });
+
+    after(function(done) {
+      User.findByIdAndRemove(userId, function(err, removed) {
+        if(err) {
+          console.error(err);
+        }
+        done();
+      });
+    });
+
+    it('should return status code 204 when user is updated with good jwt', () => {
+      return chai.request('http://localhost:3003')
+      .put('/user/' + userId)
+      .set('Authorization', 'Bearer ' + userToken)
+      .send(user)
+      .then(res => {
+        res.should.have.status(204);
+        res.should.not.be.json;
+      })
+      .catch(err => {
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 404 when user not found');
+    it('should return status code 401 when bad jwt');
+    it('should return status code 403 user is different from caller');
+  });
+
+  describe('/DELETE user/:id', () => {
+    let userId;
+
+    let user = new User({
+      email: 'user',
+      password: 'user',
+      admin: false,
+      name: 'User'
+    });
+    var userPayload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
+    before(function (done) {
+      user.save( function (err, res) {
+        if(err) {
+          console.error(err);
+        }
+        userId = user.id;
+        done();
+      }); // It is now guaranteed to finish before 'it' starts.
+    });
+
+    after(function(done) {
+      User.findByIdAndRemove(userId, function(err, removed) {
+        if(err) {
+          console.error(err);
+          throw err;
+        }
+        done();
+      });
+    });
+
+    it('should return status code 204 when user is deleted with good jwt', () => {
+      return chai.request('http://localhost:3003')
+      .delete('/user/' + userId)
+      .set('Authorization', 'Bearer ' + userToken)
+      .then(res => {
+        res.should.have.status(204);
+        res.should.not.be.json;
+      })
+      .catch(err => {
+        // console.error(err);
+        throw err; // Re-throw the error if the test should fail when an error happens
+      });
+    });
+    it('should return status code 404 when user not found');
+    it('should return status code 401 when bad jwt');
+    it('should return status code 403 user is different from caller');
   });
 });
 
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
 
+    let userId;
     before(function(done) {
       let user = new User({
         email: 'user',
@@ -367,12 +487,13 @@ describe('/authenticate', () => {
         if(err){
           console.error(err);
         }
+        userId = user.id;
         done();
       });
     });
 
     after(function(done) {
-      User.find({}).remove(function(err, removed) {
+      User.findByIdAndRemove(userId, function(err, removed) {
         if(err) {
           console.error(err);
         }
@@ -386,7 +507,7 @@ describe('/authenticate', () => {
       .send({
         email: 'user',
         password: 'user'
-        })
+      })
       .then(res => {
         res.should.have.status(200);
         res.should.be.json;
@@ -402,7 +523,7 @@ describe('/authenticate', () => {
       .send({
         email: 'badUsername',
         password: 'user'
-        })
+      })
       .then(res => {
         res.should.have.status(200);
         res.should.be.json;
@@ -418,7 +539,7 @@ describe('/authenticate', () => {
       .send({
         email: 'user',
         password: 'badPassword'
-        })
+      })
       .then(res => {
         res.should.have.status(200);
         res.should.be.json;
