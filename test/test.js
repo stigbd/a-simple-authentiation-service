@@ -7,34 +7,8 @@ var jwt = require('jsonwebtoken');
 let should = chai.should();
 let dotenv = require('dotenv').config();
 chai.use(chaiHttp);
-let adminToken, userToken;
 
-let user = new User({
-  email: 'user',
-  password: 'user',
-  admin: false,
-  name: 'User'
-});
-let admin = new User({
-  email: 'admin',
-  password: 'admin',
-  admin: true,
-  name: 'Admin'
-});
-var adminPayload = {
-  name: admin.name,
-  email: admin.email,
-  admin: admin.admin
-};
-var userPayload = {
-  name: user.name,
-  email: user.email,
-  admin: user.admin
-};
-adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
-userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
-dbConnectionString =
-'mongodb://'
+dbConnectionString ='mongodb://'
 + process.env.DBHOST
 + ':'
 + process.env.DBPORT
@@ -62,6 +36,7 @@ after(function(done){
 });
 
 describe('/', () => {
+
   describe('GET /', () => {
     it('should return status code 200 when GET /', () => {
       return chai.request('http://localhost:3003')
@@ -78,8 +53,34 @@ describe('/', () => {
 });
 
 describe('/user', () => {
+  let adminToken, userToken;
 
   before(function (done) {
+    let user = new User({
+      email: 'user',
+      password: 'user',
+      admin: false,
+      name: 'User'
+    });
+    let admin = new User({
+      email: 'admin',
+      password: 'admin',
+      admin: true,
+      name: 'Admin'
+    });
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    };
+    var userPayload = {
+      name: user.name,
+      email: user.email,
+      admin: user.admin
+    };
+    adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+    userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
     user.save( function (res) {
       userId = user.id;
     }); // It is now guaranteed to finish before 'it' starts.
@@ -159,6 +160,12 @@ describe('/user', () => {
     });
 
     it('should return status code 201 and location header when posting new user', () => {
+      let user = new User({
+        email: 'user',
+        password: 'user',
+        admin: false,
+        name: 'User'
+      });
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
@@ -211,6 +218,12 @@ describe('/user', () => {
       });
     });
     it('should return status code 400 when duplicate user, i.e. email', () => {
+      let user = new User({
+        email: 'user',
+        password: 'user',
+        admin: false,
+        name: 'User'
+      });
       return chai.request('http://localhost:3003')
       .post('/user')
       .send(user)
@@ -232,26 +245,38 @@ describe('/user', () => {
 describe('/user/:id', () => {
 
   let adminId, userId;
-  console.log('user', user);
 
-  let getIdUser = new User({
+  let user = new User({
     email: 'user',
     password: 'user',
     admin: false,
     name: 'User'
   });
-  let getIdAdmin = new User({
+  let admin = new User({
     email: 'admin',
     password: 'admin',
     admin: false,
     name: 'Admin'
   });
+  var adminPayload = {
+    name: admin.name,
+    email: admin.email,
+    admin: admin.admin
+  };
+  var userPayload = {
+    name: user.name,
+    email: user.email,
+    admin: user.admin
+  };
+  adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 });
+  userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 });
+
   before(function (done) {
-    getIdUser.save( function (res) {
-      userId = getIdUser.id;
+    user.save( function (res) {
+      userId = user.id;
     }); // It is now guaranteed to finish before 'it' starts.
-    getIdAdmin.save( function (res) {
-      adminId = getIdAdmin.id;
+    admin.save( function (res) {
+      adminId = admin.id;
       done();
     }); // It is now guaranteed to finish before 'it' starts.
   });
@@ -330,7 +355,14 @@ describe('/user/:id', () => {
 
 describe('/authenticate', () => {
   describe('/POST authenticate', () => {
+
     before(function(done) {
+      let user = new User({
+        email: 'user',
+        password: 'user',
+        admin: false,
+        name: 'User'
+      });
       user.save(function(err, data){
         if(err){
           console.error(err);
@@ -338,6 +370,7 @@ describe('/authenticate', () => {
         done();
       });
     });
+
     after(function(done) {
       User.find({}).remove(function(err, removed) {
         if(err) {
@@ -346,12 +379,13 @@ describe('/authenticate', () => {
       });
       done();
     });
+
     it('should return status code 200 and a jwt when good username/password', () => {
       return chai.request('http://localhost:3003')
       .post('/authenticate')
       .send({
-        email: user.email,
-        password: user.password
+        email: 'user',
+        password: 'user'
         })
       .then(res => {
         res.should.have.status(200);
@@ -367,7 +401,7 @@ describe('/authenticate', () => {
       .post('/authenticate')
       .send({
         email: 'badUsername',
-        password: user.password
+        password: 'user'
         })
       .then(res => {
         res.should.have.status(200);
@@ -382,7 +416,7 @@ describe('/authenticate', () => {
       return chai.request('http://localhost:3003')
       .post('/authenticate')
       .send({
-        email: user.email,
+        email: 'user',
         password: 'badPassword'
         })
       .then(res => {
