@@ -158,6 +158,11 @@ describe('/user', () => {
 
   describe('/POST user', () => {
     after(function (done) {
+      User.findOneAndRemove({email: 'admin'}, function (err) {
+        if (err) {
+          console.error(err)
+        }
+      })
       User.findOneAndRemove({email: 'newUser'}, function (err) {
         if (err) {
           console.error(err)
@@ -179,6 +184,27 @@ describe('/user', () => {
         .then(res => {
           res.should.have.status(201)
           res.should.have.header('Location')
+        })
+        .catch(err => {
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 403 when new user is given admin-role', () => {
+      return chai.request('http://localhost:3003')
+        .post('/user')
+        .send({
+          email: 'admin',
+          password: 'admin',
+          admin: true,
+          name: 'Admin'
+        })
+        .then(res => {
+          res.should.have.status(403)
+          res.should.be.json()
+          res.body.should.have.property('errorName')
+          res.body.errorName.should.equal('Forbidden')
+          res.body.should.have.property('errorMessage')
+          res.body.errorMessage.should.include('Cannot create admin-user via API')
         })
         .catch(err => {
           throw err // Re-throw the error if the test should fail when an error happens

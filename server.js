@@ -67,6 +67,9 @@ app.post('/user', function (req, res) {
     admin: req.body.admin,
     name: req.body.name
   })
+  if (newUser.admin) {
+    return res.status(403).json({errorName: 'Forbidden', errorMessage: 'Cannot create admin-user via API'})
+  }
   newUser.save(function (err) {
     if (err && err.name === 'MongoError' && err.message.includes('E11000')) {
       err.name = 'DuplicationError'
