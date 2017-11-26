@@ -520,9 +520,10 @@ describe('/authenticate', () => {
           password: 'user'
         })
         .then(res => {
-          res.should.have.status(200)
+          res.should.have.status(401)
           res.should.be.json()
-          res.body.should.have.property('token')
+          res.body.should.have.property('message')
+          res.body.message.should.equal('Bad username')
         })
         .catch(err => {
           throw err // Re-throw the error if the test should fail when an error happens
@@ -536,9 +537,10 @@ describe('/authenticate', () => {
           password: 'badPassword'
         })
         .then(res => {
-          res.should.have.status(200)
+          res.should.have.status(401)
           res.should.be.json()
-          res.body.should.have.property('token')
+          res.body.should.have.property('message')
+          res.body.message.should.equal('Bad password')
         })
         .catch(err => {
           throw err // Re-throw the error if the test should fail when an error happens

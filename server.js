@@ -89,15 +89,17 @@ app.post('/authenticate', function (req, res) {
   let data = {
     email: req.body.email
   }
-  User.find(data, function (err, user) {
+  console.log('req.body.email: ', req.body.email)
+  User.findOne(data, function (err, user) {
     if (!user) {
-      return res.sendStatus(404)
+      return res.status(401).send({'message': 'Bad username'})
     }
     if (err) {
       return res.sendStatus(500)
     }
-    if (req.email !== user.email) {
-      return res.sendStatus(401)
+    console.log('user: ', user)
+    if (req.body.password !== user.password) {
+      return res.status(401).send({'message': 'Bad password'})
     }
     var payload = {
       id: user.id,
@@ -151,6 +153,7 @@ app.get('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
+    console.log('req.user: ', req.user)
     // Only the user should have access:
     if (user.email !== req.user.email) {
       return res.sendStatus(403)
