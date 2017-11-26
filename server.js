@@ -89,7 +89,6 @@ app.post('/authenticate', function (req, res) {
   let data = {
     email: req.body.email
   }
-  console.log('req.body.email: ', req.body.email)
   User.findOne(data, function (err, user) {
     if (!user) {
       return res.status(401).send({'message': 'Bad username'})
@@ -97,7 +96,6 @@ app.post('/authenticate', function (req, res) {
     if (err) {
       return res.sendStatus(500)
     }
-    console.log('user: ', user)
     if (req.body.password !== user.password) {
       return res.status(401).send({'message': 'Bad password'})
     }
@@ -153,7 +151,6 @@ app.get('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
-    console.log('req.user: ', req.user)
     // Only the user should have access:
     if (user.email !== req.user.email) {
       return res.sendStatus(403)
