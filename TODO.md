@@ -6,6 +6,6 @@
 -   [X] port number should be configurable
 -   [X] Return 201 Created on posts with uri in location header
 -   [X] DBhost and port should be configurable
--   [ ] Fix error when returning error
--   [ ] Add tests
+-   [X] Fix error when returning error
+-   [X] Add tests
 -   [ ] Password should be bcrypted as a pre-save hook in model
