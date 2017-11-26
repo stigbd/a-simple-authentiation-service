@@ -360,13 +360,19 @@ describe('/user/:id', () => {
   })
 
   describe('/PUT user/:id', () => {
-    let userId
+    let adminId, userId
 
     let user = new User({
       email: 'user',
       password: 'user',
       admin: false,
       name: 'User'
+    })
+    let admin = new User({
+      email: 'admin',
+      password: 'admin',
+      admin: false,
+      name: 'Admin'
     })
     var userPayload = {
       name: user.name,
@@ -379,9 +385,14 @@ describe('/user/:id', () => {
       user.save(function (err) {
         if (err) {
           console.error(err)
-          throw err
         }
         userId = user.id
+      }) // It is now guaranteed to finish before 'it' starts.
+      admin.save(function (err) {
+        if (err) {
+          console.error(err)
+        }
+        adminId = admin.id
         done()
       }) // It is now guaranteed to finish before 'it' starts.
     })
@@ -390,6 +401,13 @@ describe('/user/:id', () => {
       User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
+          throw err
+        }
+      })
+      User.findByIdAndRemove(adminId, function (err) {
+        if (err) {
+          console.error(err)
+          throw err
         }
         done()
       })
@@ -408,19 +426,64 @@ describe('/user/:id', () => {
           throw err // Re-throw the error if the test should fail when an error happens
         })
     })
-    it('should return status code 404 when user not found')
-    it('should return status code 401 when bad jwt')
-    it('should return status code 403 user is different from caller')
+    it('should return status code 404 when user not found', () => {
+      var id = require('mongoose').Types.ObjectId()
+      return chai.request('http://localhost:3003')
+        .put('/user/' + id)
+        .set('Authorization', 'Bearer ' + userToken)
+        .then(res => {
+          res.should.have.status(404)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 401 when bad jwt', () => {
+      return chai.request('http://localhost:3003')
+        .put('/user/' + userId)
+        .set('Authorization', 'Bearer ' + 'badUserToken')
+        .then(res => {
+          res.should.have.status(401)
+          res.should.be.json()
+          res.body.should.have.property('message')
+          res.body.message.should.equal('Invalid token')
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 403 user is different from caller', () => {
+      return chai.request('http://localhost:3003')
+        .put('/user/' + adminId)
+        .set('Authorization', 'Bearer ' + userToken)
+        .then(res => {
+          res.should.have.status(403)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
   })
 
   describe('/DELETE user/:id', () => {
-    let userId
+    let adminId, userId
 
     let user = new User({
       email: 'user',
       password: 'user',
       admin: false,
       name: 'User'
+    })
+    let admin = new User({
+      email: 'admin',
+      password: 'admin',
+      admin: false,
+      name: 'Admin'
     })
     var userPayload = {
       name: user.name,
@@ -435,12 +498,24 @@ describe('/user/:id', () => {
           console.error(err)
         }
         userId = user.id
+      }) // It is now guaranteed to finish before 'it' starts.
+      admin.save(function (err) {
+        if (err) {
+          console.error(err)
+        }
+        adminId = admin.id
         done()
       }) // It is now guaranteed to finish before 'it' starts.
     })
 
     after(function (done) {
       User.findByIdAndRemove(userId, function (err) {
+        if (err) {
+          console.error(err)
+          throw err
+        }
+      })
+      User.findByIdAndRemove(adminId, function (err) {
         if (err) {
           console.error(err)
           throw err
@@ -462,9 +537,48 @@ describe('/user/:id', () => {
           throw err // Re-throw the error if the test should fail when an error happens
         })
     })
-    it('should return status code 404 when user not found')
-    it('should return status code 401 when bad jwt')
-    it('should return status code 403 user is different from caller')
+    it('should return status code 404 when user not found', () => {
+      var id = require('mongoose').Types.ObjectId()
+      return chai.request('http://localhost:3003')
+        .delete('/user/' + id)
+        .set('Authorization', 'Bearer ' + userToken)
+        .then(res => {
+          res.should.have.status(404)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 401 when bad jwt', () => {
+      return chai.request('http://localhost:3003')
+        .delete('/user/' + userId)
+        .set('Authorization', 'Bearer ' + 'badUserToken')
+        .then(res => {
+          res.should.have.status(401)
+          res.should.be.json()
+          res.body.should.have.property('message')
+          res.body.message.should.equal('Invalid token')
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 403 user is different from caller', () => {
+      return chai.request('http://localhost:3003')
+        .delete('/user/' + adminId)
+        .set('Authorization', 'Bearer ' + userToken)
+        .then(res => {
+          res.should.have.status(403)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
   })
 })
 

@@ -176,10 +176,15 @@ app.put('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
-    user.name = req.body.name
-    user.password = req.body.password
+    // Only the user should have access:
+    if (user.email !== req.user.email) {
+      return res.sendStatus(403)
+    }
+    user.name = req.body.name || user.name
+    user.password = req.body.password || user.password
     user.save(function (err) {
       if (err) {
+        console.error(err)
         return res.sendStatus(500)
       }
     })
@@ -197,6 +202,10 @@ app.delete('/user/:id', auth, (req, res) => {
     }
     if (!user) {
       return res.sendStatus(404)
+    }
+    // Only the user should have access:
+    if (user.email !== req.user.email) {
+      return res.sendStatus(403)
     }
     res.sendStatus(204)
   })
