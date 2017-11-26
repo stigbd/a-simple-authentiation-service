@@ -262,7 +262,7 @@ describe('/user/:id', () => {
     let admin = new User({
       email: 'admin',
       password: 'admin',
-      admin: false,
+      admin: true,
       name: 'Admin'
     })
     var userPayload = {
@@ -270,7 +270,13 @@ describe('/user/:id', () => {
       email: user.email,
       admin: user.admin
     }
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    }
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
+    let adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
       user.save(function (err) {
@@ -357,6 +363,19 @@ describe('/user/:id', () => {
           throw err // Re-throw the error if the test should fail when an error happens
         })
     })
+    it('should return status code 200 and a user object when caller has admin role', () => {
+      return chai.request('http://localhost:3003')
+        .get('/user/' + userId)
+        .set('Authorization', 'Bearer ' + adminToken)
+        .then(res => {
+          res.should.have.status(200)
+          res.should.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
   })
 
   describe('/PUT user/:id', () => {
@@ -371,7 +390,7 @@ describe('/user/:id', () => {
     let admin = new User({
       email: 'admin',
       password: 'admin',
-      admin: false,
+      admin: true,
       name: 'Admin'
     })
     var userPayload = {
@@ -379,7 +398,13 @@ describe('/user/:id', () => {
       email: user.email,
       admin: user.admin
     }
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    }
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
+    let adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
       user.save(function (err) {
@@ -468,10 +493,23 @@ describe('/user/:id', () => {
           throw err // Re-throw the error if the test should fail when an error happens
         })
     })
+    it('should return status code 204 when caller has admin role', () => {
+      return chai.request('http://localhost:3003')
+        .put('/user/' + userId)
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send(user)
+        .then(res => {
+          res.should.have.status(204)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
   })
 
   describe('/DELETE user/:id', () => {
-    let adminId, userId
+    let adminId, userId, anotherUserId
 
     let user = new User({
       email: 'user',
@@ -479,17 +517,29 @@ describe('/user/:id', () => {
       admin: false,
       name: 'User'
     })
+    let anotherUser = new User({
+      email: 'anotherUser',
+      password: 'anotherUser',
+      admin: false,
+      name: 'AnotherUser'
+    })
     let admin = new User({
       email: 'admin',
       password: 'admin',
-      admin: false,
+      admin: true,
       name: 'Admin'
     })
+    var adminPayload = {
+      name: admin.name,
+      email: admin.email,
+      admin: admin.admin
+    }
     var userPayload = {
       name: user.name,
       email: user.email,
       admin: user.admin
     }
+    let adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 })
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
@@ -498,6 +548,12 @@ describe('/user/:id', () => {
           console.error(err)
         }
         userId = user.id
+      }) // It is now guaranteed to finish before 'it' starts.
+      anotherUser.save(function (err) {
+        if (err) {
+          console.error(err)
+        }
+        anotherUserId = anotherUser.id
       }) // It is now guaranteed to finish before 'it' starts.
       admin.save(function (err) {
         if (err) {
@@ -510,6 +566,12 @@ describe('/user/:id', () => {
 
     after(function (done) {
       User.findByIdAndRemove(userId, function (err) {
+        if (err) {
+          console.error(err)
+          throw err
+        }
+      })
+      User.findByIdAndRemove(anotherUserId, function (err) {
         if (err) {
           console.error(err)
           throw err
@@ -572,6 +634,19 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(403)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+    it('should return status code 204 when caller has admin role', () => {
+      return chai.request('http://localhost:3003')
+        .delete('/user/' + anotherUserId)
+        .set('Authorization', 'Bearer ' + adminToken)
+        .then(res => {
+          res.should.have.status(204)
           res.should.not.be.json()
         })
         .catch(err => {

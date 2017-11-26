@@ -151,9 +151,11 @@ app.get('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
-    // Only the user should have access:
-    if (user.email !== req.user.email) {
-      return res.sendStatus(403)
+    // Only the user or an admin should have access:
+    if (!req.user.admin) {
+      if (user.email !== req.user.email) {
+        return res.sendStatus(403)
+      }
     }
     var payload = {
       id: user.id,
@@ -176,9 +178,11 @@ app.put('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
-    // Only the user should have access:
-    if (user.email !== req.user.email) {
-      return res.sendStatus(403)
+    // Only the user or an admin should have access:
+    if (!req.user.admin) {
+      if (user.email !== req.user.email) {
+        return res.sendStatus(403)
+      }
     }
     user.name = req.body.name || user.name
     user.password = req.body.password || user.password
@@ -203,9 +207,11 @@ app.delete('/user/:id', auth, (req, res) => {
     if (!user) {
       return res.sendStatus(404)
     }
-    // Only the user should have access:
-    if (user.email !== req.user.email) {
-      return res.sendStatus(403)
+    // Only the user or an admin should have access:
+    if (!req.user.admin) {
+      if (user.email !== req.user.email) {
+        return res.sendStatus(403)
+      }
     }
     res.sendStatus(204)
   })
