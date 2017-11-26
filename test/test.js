@@ -303,7 +303,6 @@ describe('/user/:id', () => {
     })
 
     it('should return status code 200 and a user-object when good jwt and user is identical to caller', () => {
-      console.log('Testing GET user:', userId)
       return chai.request('http://localhost:3003')
         .get('/user/' + userId)
         .set('Authorization', 'Bearer ' + userToken)
