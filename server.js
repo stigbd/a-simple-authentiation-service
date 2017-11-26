@@ -143,10 +143,9 @@ app.get('/user', auth, (req, res) => {
 // Only the user or an admin should have access to this
 app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id
-  console.log('id:', id)
   User.findById(id, function (err, user) {
     if (err) {
-      console.log(err)
+      console.error(err)
       return res.sendStatus(500)
     }
     if (!user) {
