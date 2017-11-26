@@ -6,9 +6,13 @@ let User = require('../models/user')
 var chai = require('chai')
 var chaiHttp = require('chai-http')
 var jwt = require('jsonwebtoken')
+
 let should = chai.should()
-let dotenv = require('dotenv').config()
+require('dotenv').config()
 chai.use(chaiHttp)
+var dirtyChai = require('dirty-chai')
+
+chai.use(dirtyChai)
 
 let dbConnectionString = 'mongodb://' +
 process.env.DBHOST +
@@ -18,7 +22,7 @@ process.env.DBPORT +
 process.env.TEST_DATABASE
 
 before(function (done) {
-  mongoose.connect(dbConnectionString, {useMongoClient: true}, function (err, db) {
+  mongoose.connect(dbConnectionString, {useMongoClient: true}, function (err) {
     if (err) {
       console.error('Error connecting to mongodb: ', err.message)
     } else {
@@ -84,13 +88,13 @@ describe('/user', () => {
       adminToken = jwt.sign(adminPayload, process.env.SECRET, { expiresIn: 1440 })
       userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
 
-      user.save(function (err, res) {
+      user.save(function (err) {
         if (err) {
           console.error(err)
         }
         userId = user.id
       }) // It is now guaranteed to finish before 'it' starts.
-      admin.save(function (err, res) {
+      admin.save(function (err) {
         if (err) {
           console.error(err)
         }
@@ -100,12 +104,12 @@ describe('/user', () => {
     })
 
     after(function (done) {
-      User.findByIdAndRemove(userId, function (err, removed) {
+      User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
         }
       })
-      User.findByIdAndRemove(adminId, function (err, removed) {
+      User.findByIdAndRemove(adminId, function (err) {
         if (err) {
           console.error(err)
         }
@@ -118,7 +122,7 @@ describe('/user', () => {
         .set('Authorization', 'Bearer ' + adminToken) // Should Bearer be included?
         .then(res => {
           res.should.have.status(200)
-          res.should.be.json
+          res.should.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -143,7 +147,7 @@ describe('/user', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(403)
-          res.should.not.be.json
+          res.should.not.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -154,7 +158,7 @@ describe('/user', () => {
 
   describe('/POST user', () => {
     after(function (done) {
-      User.findOneAndRemove({email: 'newUser'}, function (err, removed) {
+      User.findOneAndRemove({email: 'newUser'}, function (err) {
         if (err) {
           console.error(err)
         }
@@ -190,7 +194,7 @@ describe('/user', () => {
         })
         .then(res => {
           res.should.have.status(400)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('errorName')
           res.body.errorName.should.equal('ValidationError')
           res.body.should.have.property('errorMessage')
@@ -210,7 +214,7 @@ describe('/user', () => {
         })
         .then(res => {
           res.should.have.status(400)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('errorName')
           res.body.errorName.should.equal('ValidationError')
           res.body.should.have.property('errorMessage')
@@ -232,7 +236,7 @@ describe('/user', () => {
         .send(user)
         .then(res => {
           res.should.have.status(400)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('errorName')
           res.body.errorName.should.equal('DuplicationError')
           res.body.should.have.property('errorMessage')
@@ -269,13 +273,13 @@ describe('/user/:id', () => {
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
-      user.save(function (err, res) {
+      user.save(function (err) {
         if (err) {
           console.error(err)
         }
         userId = user.id
       }) // It is now guaranteed to finish before 'it' starts.
-      admin.save(function (err, res) {
+      admin.save(function (err) {
         if (err) {
           console.error(err)
         }
@@ -285,12 +289,12 @@ describe('/user/:id', () => {
     })
 
     after(function (done) {
-      User.findByIdAndRemove(userId, function (err, removed) {
+      User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
         }
       })
-      User.findByIdAndRemove(adminId, function (err, removed) {
+      User.findByIdAndRemove(adminId, function (err) {
         if (err) {
           console.error(err)
         }
@@ -305,7 +309,7 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(200)
-          res.should.be.json
+          res.should.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -319,7 +323,7 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(404)
-          res.should.not.be.json
+          res.should.not.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -332,7 +336,7 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + 'badUserToken')
         .then(res => {
           res.should.have.status(401)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('message')
           res.body.message.should.equal('Invalid token')
         })
@@ -347,7 +351,7 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(403)
-          res.should.not.be.json
+          res.should.not.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -373,7 +377,7 @@ describe('/user/:id', () => {
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
-      user.save(function (err, res) {
+      user.save(function (err) {
         if (err) {
           console.error(err)
           throw err
@@ -384,7 +388,7 @@ describe('/user/:id', () => {
     })
 
     after(function (done) {
-      User.findByIdAndRemove(userId, function (err, removed) {
+      User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
         }
@@ -399,7 +403,7 @@ describe('/user/:id', () => {
         .send(user)
         .then(res => {
           res.should.have.status(204)
-          res.should.not.be.json
+          res.should.not.be.json()
         })
         .catch(err => {
           throw err // Re-throw the error if the test should fail when an error happens
@@ -427,7 +431,7 @@ describe('/user/:id', () => {
     let userToken = jwt.sign(userPayload, process.env.SECRET, { expiresIn: 1440 })
 
     before(function (done) {
-      user.save(function (err, res) {
+      user.save(function (err) {
         if (err) {
           console.error(err)
         }
@@ -437,7 +441,7 @@ describe('/user/:id', () => {
     })
 
     after(function (done) {
-      User.findByIdAndRemove(userId, function (err, removed) {
+      User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
           throw err
@@ -452,7 +456,7 @@ describe('/user/:id', () => {
         .set('Authorization', 'Bearer ' + userToken)
         .then(res => {
           res.should.have.status(204)
-          res.should.not.be.json
+          res.should.not.be.json()
         })
         .catch(err => {
         // console.error(err);
@@ -475,7 +479,7 @@ describe('/authenticate', () => {
         admin: false,
         name: 'User'
       })
-      user.save(function (err, data) {
+      user.save(function (err) {
         if (err) {
           console.error(err)
         }
@@ -485,7 +489,7 @@ describe('/authenticate', () => {
     })
 
     after(function (done) {
-      User.findByIdAndRemove(userId, function (err, removed) {
+      User.findByIdAndRemove(userId, function (err) {
         if (err) {
           console.error(err)
         }
@@ -502,7 +506,7 @@ describe('/authenticate', () => {
         })
         .then(res => {
           res.should.have.status(200)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('token')
         })
         .catch(err => {
@@ -518,7 +522,7 @@ describe('/authenticate', () => {
         })
         .then(res => {
           res.should.have.status(200)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('token')
         })
         .catch(err => {
@@ -534,7 +538,7 @@ describe('/authenticate', () => {
         })
         .then(res => {
           res.should.have.status(200)
-          res.should.be.json
+          res.should.be.json()
           res.body.should.have.property('token')
         })
         .catch(err => {
