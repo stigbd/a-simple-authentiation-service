@@ -4,7 +4,9 @@ services:
     build: .
     ports:
       - "3003:3003"
-  database:
+    environment:
+      - DBHOST=users-database
+  users-database:
     image: mongo
     ports:
       - "27017:27017"
