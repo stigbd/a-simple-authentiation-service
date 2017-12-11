@@ -1,3 +1,5 @@
+# stigbd/authentication-service
+
 FROM node
 
 # Copy source code
