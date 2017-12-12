@@ -9,25 +9,24 @@
     "dev": "nodemon server.js",
     "start_test": "NODE_ENV=test nodemon server.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Stig B. Dørmænen",
+  "license": "MIT",
   "dependencies": {
-    "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
     "express-jwt": "^5.3.0",
     "jsonwebtoken": "^8.1.0",
-    "mongoose": "^4.13.6",
+    "mongoose": "^4.13.7",
     "morgan": "^1.9.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-http": "git+https://github.com/chaijs/chai-http.git",
     "dirty-chai": "^2.0.1",
-    "eslint": "^4.12.1",
-    "eslint-config-standard": "^10.2.1",
+    "eslint": "^4.13.1",
+    "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-mocha": "^4.11.0",
     "eslint-plugin-node": "^5.2.1",
@@ -39,8 +38,6 @@
     "type": "git",
     "url": "https://github.com/stigbd/a-simple-authentication-service.git"
   },
-  "author": "Stig B. Dørmænen",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/stigbd/a-simple-authentication-service/issues"
   },
