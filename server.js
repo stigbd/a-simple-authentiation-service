@@ -37,7 +37,7 @@ if (process.env.NODE_ENV !== 'test') {
   '/' +
   process.env.DATABASE
 }
-mongoose.connect(dbConnectionString, {useMongoClient: true}, function (err) {
+mongoose.connect(dbConnectionString, { useNewUrlParser: true, useCreateIndex: true }, function (err) {
   if (err) {
     console.error('Error connecting to mongodb: ', err.message)
   } else {

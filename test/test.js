@@ -22,7 +22,7 @@ process.env.DBPORT +
 process.env.TEST_DATABASE
 
 before(function (done) {
-  mongoose.connect(dbConnectionString, {useMongoClient: true}, function (err) {
+  mongoose.connect(dbConnectionString, { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false }, function (err) {
     if (err) {
       console.error('Error connecting to mongodb: ', err.message)
     } else {
