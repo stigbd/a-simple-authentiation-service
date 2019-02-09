@@ -4,8 +4,11 @@ A small service where a user can register and authenticate. Upon succesfull auth
 
 Inspired by <https://ciphertrick.com/2017/01/11/token-based-authentication-node-js-using-jwt/>
 
-Use ```docker run -p 127.0.0.1:27017:27017 --name some-mongo -d mongo```
-to start mongodb
+## Prerequisites
+You need to have a mongo database running.
+```
+docker run -p 127.0.0.1:27017:27017 --name some-mongo -d mongo
+```
 
 ## Usage
 ```
