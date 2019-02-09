@@ -17,7 +17,7 @@ npm run dev
 ```
 
 ### Environment variables
-Example:
+Put the following in a file with filename .env:
 ```
 SECRET=secret
 HOST=localhost
