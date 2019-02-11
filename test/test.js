@@ -57,6 +57,22 @@ describe('/', () => {
   })
 })
 
+describe('/secret' ,() => {
+  describe('GET /secret', () => {
+    it('should return status code 401 when GET and no valid jwt /', () => {
+      return chai.request('http://localhost:3003/secret')
+        .get('/')
+        .then(res => {
+          res.should.have.status(401)
+        })
+        .catch(err => {
+          console.error(err)
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
+  })
+})
+
 describe('/user', () => {
   describe('/GET user', () => {
     let adminToken, userToken
