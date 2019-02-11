@@ -10,7 +10,7 @@ You need to have a mongo database running.
 docker run -p 127.0.0.1:27017:27017 --name some-mongo -d mongo
 ```
 
-## Usage
+## Running
 ```
 git clone https://github.com/stigbd/a-simple-authentication-service.git
 cd a-simple-authentication-service
@@ -29,7 +29,14 @@ DBHOST=localhost
 DBPORT=27017
 TEST_DATABASE=user
 ```
+## Using
+```
+curl -i -H "Content-Type: application/json" -X GET http://localhost:3003/secret # should return 401 Unauthorized
+curl -i -H "Content-Type: application/json" -d '{"email":"user@example.com", "password":"secret"}' -X POST http://localhost:3003/user # To create a user
+curl -i -H "Content-Type: application/json" -d '{"email":"user@example.com", "password":"secret"}' -X POST http://localhost:3003/authenticate # To authenticate the user and get a jsonwebtoken
+curl -i -H "Authorization: Bearer <paste in your jsontoken from the body in the preceeding call>" -X GET http://localhost:3003/secret # should return 200 Ok and a secret message in the body
 
+```
 ## Testing
 ```
 npm run start_test # to start the server in test mode

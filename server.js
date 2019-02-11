@@ -117,6 +117,10 @@ app.post('/authenticate', function (req, res) {
 // ===== Protected Routes =====
 var auth = jwt({secret: process.env.SECRET})
 
+app.get('/secret', auth, (req, res) => {
+  res.send('Hello, this is the secret ;-)\n')
+})
+
 // Get a list of users
 // Only users with admin-role should have access to this
 app.get('/user', auth, (req, res) => {
