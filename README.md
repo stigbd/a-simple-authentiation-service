@@ -31,7 +31,7 @@ TEST_DATABASE=user
 ```
 ## Using
 ```
-curl -i -H "Content-Type: application/json" -X GET http://localhost:3003/secret # should return 401 Unauthorized
+curl -i -H "Accept: application/json" -X GET http://localhost:3003/secret # should return 401 Unauthorized
 curl -i -H "Content-Type: application/json" -d '{"email":"user@example.com", "password":"secret"}' -X POST http://localhost:3003/user # To create a user
 curl -i -H "Content-Type: application/json" -d '{"email":"user@example.com", "password":"secret"}' -X POST http://localhost:3003/authenticate # To authenticate the user and get a jsonwebtoken
 curl -i -H "Authorization: Bearer <paste in your jsontoken from the body in the preceeding call>" -X GET http://localhost:3003/secret # should return 200 Ok and a secret message in the body
