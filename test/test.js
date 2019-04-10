@@ -57,7 +57,7 @@ describe('/', () => {
   })
 })
 
-describe('/secret' ,() => {
+describe('/secret', () => {
   describe('GET /secret', () => {
     it('should return status code 401 when GET and no valid jwt /', () => {
       return chai.request('http://localhost:3003/secret')
@@ -174,12 +174,12 @@ describe('/user', () => {
 
   describe('/POST user', () => {
     after(function (done) {
-      User.findOneAndRemove({email: 'admin'}, function (err) {
+      User.findOneAndRemove({ email: 'admin' }, function (err) {
         if (err) {
           console.error(err)
         }
       })
-      User.findOneAndRemove({email: 'newUser'}, function (err) {
+      User.findOneAndRemove({ email: 'newUser' }, function (err) {
         if (err) {
           console.error(err)
         }

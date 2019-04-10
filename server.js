@@ -58,7 +58,7 @@ app.post('/user', function (req, res) {
     email: req.body.email
   }
   if (!data.email) {
-    return res.status(400).json({errorName: 'ValidationError', errorMessage: '`email` is required'})
+    return res.status(400).json({ errorName: 'ValidationError', errorMessage: '`email` is required' })
   }
   let newUser = new User({
     email: req.body.email,
@@ -67,20 +67,20 @@ app.post('/user', function (req, res) {
     name: req.body.name
   })
   if (newUser.admin) {
-    return res.status(403).json({errorName: 'Forbidden', errorMessage: 'Cannot create admin-user via API'})
+    return res.status(403).json({ errorName: 'Forbidden', errorMessage: 'Cannot create admin-user via API' })
   }
   newUser.save(function (err) {
     if (err && err.name === 'MongoError' && err.message.includes('E11000')) {
       err.name = 'DuplicationError'
       err.message = 'User already exists'
-      return res.status(400).json({errorName: err.name, errorMessage: err.message})
+      return res.status(400).json({ errorName: err.name, errorMessage: err.message })
     }
     if (err && err.name === 'ValidationError') {
-      return res.status(400).json({errorName: err.name, errorMessage: err.message})
+      return res.status(400).json({ errorName: err.name, errorMessage: err.message })
     }
     if (err) {
       console.error(err)
-      return res.status(500).json({error: true})
+      return res.status(500).json({ error: true })
     }
     res.status(201).location('/user/' + newUser.id).send()
   })
@@ -93,13 +93,13 @@ app.post('/authenticate', function (req, res) {
   }
   User.findOne(data, function (err, user) {
     if (!user) {
-      return res.status(401).send({'message': 'Bad username'})
+      return res.status(401).send({ 'message': 'Bad username' })
     }
     if (err) {
       return res.sendStatus(500)
     }
     if (req.body.password !== user.password) {
-      return res.status(401).send({'message': 'Bad password'})
+      return res.status(401).send({ 'message': 'Bad password' })
     }
     var payload = {
       id: user.id,
@@ -110,15 +110,15 @@ app.post('/authenticate', function (req, res) {
     let token = jsonwebtoken.sign(payload, process.env.SECRET, {
       expiresIn: 1440 // expires in 1 hour
     })
-    res.json({error: false, token: token})
+    res.json({ error: false, token: token })
   })
 })
 
 // ===== Protected Routes =====
-var auth = jwt({secret: process.env.SECRET})
+var auth = jwt({ secret: process.env.SECRET })
 
 app.get('/secret', auth, (req, res) => {
-  res.json({ secretmessage: 'Hello, this is the secret message ;-)'})
+  res.json({ secretmessage: 'Hello, this is the secret message ;-)' })
 })
 
 // Get a list of users
@@ -230,7 +230,7 @@ app.delete('/user/:id', auth, (req, res) => {
 
 app.use(function (err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
-    res.status(401).send({'message': 'Invalid token'})
+    res.status(401).send({ 'message': 'Invalid token' })
   }
   next(err)
 })
