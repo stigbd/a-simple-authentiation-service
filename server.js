@@ -49,7 +49,7 @@ mongoose.connect(dbConnectionString, { useNewUrlParser: true, useCreateIndex: tr
 
 // Get root
 app.get('/', (req, res) => {
-  res.send('hello world, from a simple authentication service')
+  res.json({ message: 'hello world, from a simple authentication service' })
 })
 
 // Create a new user
@@ -118,7 +118,7 @@ app.post('/authenticate', function (req, res) {
 var auth = jwt({secret: process.env.SECRET})
 
 app.get('/secret', auth, (req, res) => {
-  res.send('Hello, this is the secret ;-)\n')
+  res.json({ secretmessage: 'Hello, this is the secret message ;-)'})
 })
 
 // Get a list of users
@@ -149,28 +149,33 @@ app.get('/user', auth, (req, res) => {
 // Only the user or an admin should have access to this
 app.get('/user/:id', auth, (req, res) => {
   var id = req.params.id
-  User.findById(id, function (err, user) {
-    if (err) {
-      console.error(err)
-      return res.sendStatus(500)
-    }
-    if (!user) {
-      return res.sendStatus(404)
-    }
-    // Only the user or an admin should have access:
-    if (!req.user.admin) {
-      if (user.email !== req.user.email) {
-        return res.sendStatus(403)
+  if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    // Yes, it's a valid ObjectId, proceed with `findById` call.
+    User.findById(id, function (err, user) {
+      if (err) {
+        console.error(err)
+        return res.sendStatus(500)
       }
-    }
-    var payload = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      admin: user.admin
-    }
-    res.send(payload)
-  })
+      if (!user) {
+        return res.sendStatus(404)
+      }
+      // Only the user or an admin should have access:
+      if (!req.user.admin) {
+        if (user.email !== req.user.email) {
+          return res.sendStatus(403)
+        }
+      }
+      var payload = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        admin: user.admin
+      }
+      res.send(payload)
+    })
+  } else {
+    res.sendStatus(404)
+  }
 })
 
 // Update user (i.e. only name and password can be changed for now)
