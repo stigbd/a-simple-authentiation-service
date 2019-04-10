@@ -377,6 +377,19 @@ describe('/user/:id', () => {
           throw err // Re-throw the error if the test should fail when an error happens
         })
     })
+    it('should return status code 404 when invalid ObjectId', () => {
+      return chai.request('http://localhost:3003')
+        .get('/user/' + 'invalidOjbectId')
+        .set('Authorization', 'Bearer ' + userToken)
+        .then(res => {
+          res.should.have.status(404)
+          res.should.not.be.json()
+        })
+        .catch(err => {
+        // console.error(err);
+          throw err // Re-throw the error if the test should fail when an error happens
+        })
+    })
     it('should return status code 401 when bad jwt', () => {
       return chai.request('http://localhost:3003')
         .get('/user/' + userId)
